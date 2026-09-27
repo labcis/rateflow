@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RateFlow">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>RateFlow · Currency Converter</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%2308111f'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle' fill='%2377e2be' font-family='-apple-system,sans-serif' font-weight='bold'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%2308111f'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle' fill='%2377e2be' font-family='-apple-system,sans-serif' font-weight='bold'%3E%E2%82%AC%3C/text%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08111f;
+      --panel: rgba(17, 28, 48, .86);
+      --panel-strong: #14243d;
+      --line: rgba(255, 255, 255, .11);
+      --text: #f4f7fb;
+      --muted: #aebbd0;
+      --accent: #77e2be;
+      --accent-2: #69b6ff;
+      --danger: #ff9a9a;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .28);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(80, 153, 255, .20), transparent 36rem),
+        radial-gradient(circle at 100% 20%, rgba(74, 218, 169, .13), transparent 34rem),
+        var(--bg);
+    }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    .shell { width: min(100% - 32px, 720px); margin: 0 auto; padding: max(22px, env(safe-area-inset-top)) 0 max(28px, env(safe-area-inset-bottom)); }
+    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin: 14px 0 28px; }
+    .eyebrow { color: var(--accent); font-size: .76rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 6px 0 0; font-size: clamp(2rem, 8vw, 3.1rem); letter-spacing: -.06em; line-height: 1; }
+    .lang-switch { display: inline-flex; padding: 4px; gap: 3px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.05); }
+    .lang-switch button { border: 0; border-radius: 999px; padding: 9px 12px; color: var(--muted); background: transparent; font-size: .82rem; font-weight: 800; }
+    .lang-switch button.active { color: var(--bg); background: var(--text); }
+    .card { border: 1px solid var(--line); border-radius: 28px; background: var(--panel); box-shadow: var(--shadow); backdrop-filter: blur(20px); }
+    .converter { padding: 22px; }
+    .field-label { display: block; margin-bottom: 9px; color: var(--muted); font-size: .82rem; font-weight: 750; letter-spacing: .04em; }
+    .amount-row { display: grid; grid-template-columns: 1fr 150px; gap: 10px; }
+    input, select { width: 100%; min-height: 58px; border: 1px solid var(--line); border-radius: 16px; color: var(--text); background: rgba(4, 11, 23, .58); outline: none; }
+    input { padding: 0 16px; font-size: 1.65rem; font-weight: 750; }
+    select { padding: 0 14px; font-size: 1.05rem; font-weight: 750; }
+    input:focus, select:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(105, 182, 255, .17); }
+    .swap-row { display: flex; align-items: center; gap: 12px; margin: 15px 0; }
+    .swap-line { height: 1px; flex: 1; background: var(--line); }
+    .swap { width: 48px; height: 48px; border: 1px solid rgba(119,226,190,.35); border-radius: 50%; color: var(--accent); background: rgba(119,226,190,.08); font-size: 1.3rem; transition: transform .2s, background .2s; }
+    .swap:active { transform: rotate(180deg) scale(.96); }
+    .result { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 18px; padding: 20px; border-radius: 20px; background: linear-gradient(135deg, rgba(119,226,190,.14), rgba(105,182,255,.12)); }
+    .result-value { overflow-wrap: anywhere; color: var(--accent); font-size: clamp(2.1rem, 9vw, 3.4rem); font-weight: 850; letter-spacing: -.05em; line-height: 1; }
+    .result-code { color: var(--muted); font-size: .9rem; font-weight: 800; }
+    .rate-line { margin: 16px 2px 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+    .rate-line strong { color: var(--text); }
+    .settings { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; margin-top: 16px; }
+    .manual-wrap { display: none; }
+    .manual-wrap.visible { display: block; }
+    .manual-wrap input { min-height: 50px; font-size: 1.15rem; }
+    .actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; }
+    .primary { min-height: 52px; padding: 0 20px; border: 0; border-radius: 15px; color: #07121d; background: var(--accent); font-weight: 850; box-shadow: 0 8px 22px rgba(119,226,190,.18); }
+    .primary:disabled { cursor: wait; opacity: .62; }
+    .secondary { min-height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; color: var(--muted); background: transparent; font-size: .9rem; font-weight: 750; }
+    .status { min-height: 20px; color: var(--muted); font-size: .8rem; text-align: right; }
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--accent); }
+    footer { margin: 20px 4px 0; color: var(--muted); font-size: .78rem; line-height: 1.6; text-align: center; }
+    footer a { color: var(--accent-2); }
+    @media (max-width: 500px) {
+      .shell { width: min(100% - 22px, 720px); }
+      header { margin-top: 8px; }
+      .amount-row { grid-template-columns: 1fr 112px; }
+      .converter { padding: 16px; }
+      .settings { grid-template-columns: 1fr; }
+      .actions { align-items: stretch; flex-direction: column-reverse; }
+      .status { text-align: left; }
+      .primary { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">RateFlow</div>
+        <h1 data-i18n="title">Currency converter</h1>
+      </div>
+      <div class="lang-switch" aria-label="Language">
+        <button type="button" data-lang="en" class="active">EN</button>
+        <button type="button" data-lang="zh-Hant">繁中</button>
+      </div>
+    </header>
+
+    <section class="card converter" aria-label="Currency converter">
+      <label class="field-label" for="amount" data-i18n="amount">Amount</label>
+      <div class="amount-row">
+        <input id="amount" type="number" inputmode="decimal" min="0" step="any" value="100" aria-label="Amount">
+        <select id="from" aria-label="From currency"></select>
+      </div>
+
+      <div class="swap-row">
+        <div class="swap-line"></div>
+        <button class="swap" id="swap" type="button" aria-label="Swap currencies">↕</button>
+        <div class="swap-line"></div>
+      </div>
+
+      <label class="field-label" for="to" data-i18n="to">Convert to</label>
+      <select id="to" aria-label="To currency"></select>
+
+      <div class="result" aria-live="polite">
+        <div class="result-value" id="result">—</div>
+        <div class="result-code" id="result-code">USD</div>
+      </div>
+      <div class="rate-line"><span data-i18n="rate">Rate</span>: <strong id="rate">—</strong></div>
+
+      <div class="settings">
+        <div class="manual-wrap" id="manual-wrap">
+          <label class="field-label" for="manual-rate" data-i18n="manualRate">Custom rate (1 source = target)</label>
+          <input id="manual-rate" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 4.6">
+        </div>
+        <button class="secondary" id="manual-toggle" type="button" data-i18n="useCustom">Use custom rate</button>
+      </div>
+
+      <div class="actions">
+        <div class="status" id="status" aria-live="polite"></div>
+        <button class="primary" id="update" type="button" data-i18n="update">Update rates</button>
+      </div>
+    </section>
+
+    <footer>
+      <span data-i18n="offline">Rates are saved on this device for offline use.</span><br>
+      <span data-i18n="source">Exchange data by</span> <a href="https://github.com/fawazahmed0/currency-api" target="_blank" rel="noreferrer">currency-api</a>.
+    </footer>
+  </main>
+
+  <script>
+    const CURRENCIES = {
+      USD: ["US Dollar", "美元"], EUR: ["Euro", "歐元"], GBP: ["British Pound", "英鎊"],
+      JPY: ["Japanese Yen", "日圓"], TWD: ["Taiwan Dollar", "新台幣"], HKD: ["Hong Kong Dollar", "港幣"],
+      CNY: ["Chinese Yuan", "人民幣"], KRW: ["South Korean Won", "韓元"], SGD: ["Singapore Dollar", "新加坡元"],
+      AUD: ["Australian Dollar", "澳元"], CAD: ["Canadian Dollar", "加拿大元"], CHF: ["Swiss Franc", "瑞士法郎"],
+      THB: ["Thai Baht", "泰銖"], MYR: ["Malaysian Ringgit", "馬來西亞令吉"], NZD: ["New Zealand Dollar", "紐西蘭元"],
+      MOP: ["Macanese Pataca", "澳門元"]
+    };
+    const TEXT = {
+      en: { title: "Currency converter", amount: "Amount", to: "Convert to", rate: "Rate", manualRate: "Custom rate (1 source = target)", useCustom: "Use custom rate", hideCustom: "Hide custom rate", update: "Update rates", offline: "Rates are saved on this device for offline use.", source: "Exchange data by", updating: "Updating rates…", updated: "Updated", offlineStatus: "Offline rates", failed: "Update failed. Showing saved rates.", invalid: "Enter a valid amount or rate." },
+      "zh-Hant": { title: "貨幣換算", amount: "金額", to: "換算至", rate: "匯率", manualRate: "自訂匯率（1 單位來源貨幣 = 目標貨幣）", useCustom: "使用自訂匯率", hideCustom: "隱藏自訂匯率", update: "更新匯率", offline: "匯率會儲存在此裝置，離線時也能使用。", source: "匯率資料來源", updating: "正在更新匯率…", updated: "已更新", offlineStatus: "離線匯率", failed: "更新失敗，顯示已儲存的匯率。", invalid: "請輸入有效的金額或匯率。" }
+    };
+    // Built-in fallback rates (USD base) so the app works fully offline on first launch.
+    const DEFAULT_RATES = {
+      USD: { USD: 1, EUR: 0.92, GBP: 0.79, JPY: 149.5, TWD: 32.1, HKD: 7.82, CNY: 7.24, KRW: 1335, SGD: 1.34, AUD: 1.52, CAD: 1.36, CHF: 0.88, THB: 35.8, MYR: 4.72, NZD: 1.64, MOP: 8.05 }
+    };
+    // Safe storage: iOS Safari can block localStorage (file:// or Private mode).
+    const memoryStore = {};
+    const store = {
+      get(key) { try { return localStorage.getItem(key); } catch (e) { return key in memoryStore ? memoryStore[key] : null; } },
+      set(key, value) { try { localStorage.setItem(key, value); } catch (e) { memoryStore[key] = value; } }
+    };
+    const $ = (id) => document.getElementById(id);
+    let lang = store.get("rateflow-lang") || "en";
+    let rates = JSON.parse(store.get("rateflow-rates") || "{}");
+    if (!Object.keys(rates).length) rates = JSON.parse(JSON.stringify(DEFAULT_RATES));
+    let custom = false;
+    const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+    function text(key) { return TEXT[lang][key]; }
+    function renderLanguage() {
+      document.documentElement.lang = lang === "en" ? "en" : "zh-Hant";
+      document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = text(el.dataset.i18n); });
+      $("manual-toggle").textContent = custom ? text("hideCustom") : text("useCustom");
+      document.querySelectorAll("[data-lang]").forEach((el) => el.classList.toggle("active", el.dataset.lang === lang));
+      populateCurrencies();
+      calculate();
+    }
+    function populateCurrencies() {
+      const currentFrom = $("from").value || "USD";
+      const currentTo = $("to").value || "TWD";
+      [$("from"), $("to")].forEach((select) => {
+        select.innerHTML = Object.entries(CURRENCIES).map(([code, names]) => `<option value="${code}">${code} · ${names[lang === "en" ? 0 : 1]}</option>`).join("");
+      });
+      $("from").value = CURRENCIES[currentFrom] ? currentFrom : "USD";
+      $("to").value = CURRENCIES[currentTo] ? currentTo : "TWD";
+      $("result-code").textContent = $("to").value;
+    }
+    function getRate(from, to) {
+      if (from === to) return 1;
+      if (custom && Number($("manual-rate").value) > 0) return Number($("manual-rate").value);
+      // Direct rate available (e.g. USD-based table).
+      if (rates[from] && Number(rates[from][to])) return Number(rates[from][to]);
+      // Cross-rate via USD base so any pair works offline.
+      const usd = rates.USD;
+      if (usd && Number(usd[from]) && Number(usd[to])) return Number(usd[to]) / Number(usd[from]);
+      return null;
+    }
+    function calculate() {
+      const amount = Number($("amount").value);
+      const from = $("from").value;
+      const to = $("to").value;
+      const rate = getRate(from, to);
+      $("result-code").textContent = to;
+      if (!Number.isFinite(amount) || amount < 0 || !rate) {
+        $("result").textContent = "—";
+        $("rate").textContent = "—";
+        return;
+      }
+      $("result").textContent = new Intl.NumberFormat(lang === "en" ? "en-US" : "zh-TW", { maximumFractionDigits: 2 }).format(amount * rate);
+      $("rate").textContent = `1 ${from} = ${new Intl.NumberFormat(lang === "en" ? "en-US" : "zh-TW", { maximumFractionDigits: 6 }).format(rate)} ${to}`;
+    }
+    function setStatus(message, type) { $("status").textContent = message; $("status").className = `status ${type || ""}`; }
+    // Multiple mirrors of the fawazahmed0/currency-api for reliability.
+    const API_MIRRORS = [
+      (c) => `https://latest.currency-api.pages.dev/v1/currencies/${c}.json`,
+      (c) => `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${c}.json`,
+      (c) => `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${c}.min.json`
+    ];
+    async function fetchRates(code) {
+      let lastError;
+      for (const build of API_MIRRORS) {
+        const url = build(code);
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          const table = data[code];
+          if (!table || typeof table !== "object") throw new Error("Bad payload");
+          return table;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("All mirrors failed");
+    }
+    async function updateRates() {
+      $("update").disabled = true;
+      setStatus(text("updating"));
+      try {
+        // Always fetch the USD base table so every currency pair works offline.
+        const table = await fetchRates("usd");
+        rates.USD = Object.fromEntries(Object.entries(table).map(([code, value]) => [code.toUpperCase(), value]));
+        store.set("rateflow-rates", JSON.stringify(rates));
+        store.set("rateflow-updated", new Date().toISOString());
+        setStatus(`${text("updated")} · ${dateFormat.format(new Date())}`, "success");
+        calculate();
+      } catch (error) {
+        setStatus(text("failed"), "error");
+        calculate();
+      } finally { $("update").disabled = false; }
+    }
+    $("amount").addEventListener("input", calculate);
+    $("from").addEventListener("change", calculate);
+    $("to").addEventListener("change", calculate);
+    $("manual-rate").addEventListener("input", calculate);
+    $("update").addEventListener("click", updateRates);
+    $("swap").addEventListener("click", () => { const from = $("from").value; $("from").value = $("to").value; $("to").value = from; calculate(); });
+    $("manual-toggle").addEventListener("click", () => { custom = !custom; $("manual-wrap").classList.toggle("visible", custom); renderLanguage(); });
+    document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => { lang = button.dataset.lang; store.set("rateflow-lang", lang); renderLanguage(); }));
+    const savedUpdated = store.get("rateflow-updated");
+    if (savedUpdated) setStatus(`${text("offlineStatus")} · ${dateFormat.format(new Date(savedUpdated))}`);
+    renderLanguage();
+    if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  </script>
+</body>
+</html>
