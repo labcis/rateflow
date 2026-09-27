@@ -53,8 +53,13 @@
     .converter { padding: 22px; }
     .field-label { display: block; margin-bottom: 9px; color: var(--muted); font-size: .82rem; font-weight: 750; letter-spacing: .04em; }
     .amount-row { display: grid; grid-template-columns: 1fr 150px; gap: 10px; }
+    .amount-field { position: relative; }
     input, select { width: 100%; min-height: 58px; border: 1px solid var(--line); border-radius: 16px; color: var(--text); background: rgba(4, 11, 23, .58); outline: none; }
     input { padding: 0 16px; font-size: 1.65rem; font-weight: 750; }
+    .amount-field input { padding-right: 56px; }
+    .clear-btn { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); width: 38px; height: 38px; display: none; align-items: center; justify-content: center; border: 0; border-radius: 50%; color: var(--muted); background: rgba(255,255,255,.08); font-size: 1.25rem; line-height: 1; }
+    .clear-btn.visible { display: flex; }
+    .clear-btn:active { background: rgba(255,255,255,.18); }
     select { padding: 0 14px; font-size: 1.05rem; font-weight: 750; }
     input:focus, select:focus { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(105, 182, 255, .17); }
     .swap-row { display: flex; align-items: center; gap: 12px; margin: 15px 0; }
@@ -107,7 +112,10 @@
     <section class="card converter" aria-label="Currency converter">
       <label class="field-label" for="amount" data-i18n="amount">Amount</label>
       <div class="amount-row">
-        <input id="amount" type="number" inputmode="decimal" min="0" step="any" value="100" aria-label="Amount">
+        <div class="amount-field">
+          <input id="amount" type="number" inputmode="decimal" min="0" step="any" value="100" aria-label="Amount">
+          <button class="clear-btn" id="clear-amount" type="button" aria-label="Clear amount">×</button>
+        </div>
         <select id="from" aria-label="From currency"></select>
       </div>
 
@@ -205,12 +213,16 @@
       if (usd && Number(usd[from]) && Number(usd[to])) return Number(usd[to]) / Number(usd[from]);
       return null;
     }
+    function updateClearButton() {
+      $("clear-amount").classList.toggle("visible", $("amount").value !== "");
+    }
     function calculate() {
       const amount = Number($("amount").value);
       const from = $("from").value;
       const to = $("to").value;
       const rate = getRate(from, to);
       $("result-code").textContent = to;
+      updateClearButton();
       if (!Number.isFinite(amount) || amount < 0 || !rate) {
         $("result").textContent = "—";
         $("rate").textContent = "—";
@@ -264,7 +276,18 @@
     $("to").addEventListener("change", calculate);
     $("manual-rate").addEventListener("input", calculate);
     $("update").addEventListener("click", updateRates);
-    $("swap").addEventListener("click", () => { const from = $("from").value; $("from").value = $("to").value; $("to").value = from; calculate(); });
+    $("clear-amount").addEventListener("click", () => { $("amount").value = ""; $("amount").focus(); calculate(); });
+    $("swap").addEventListener("click", () => {
+      const from = $("from").value;
+      $("from").value = $("to").value;
+      $("to").value = from;
+      // Recalculate the custom rate for the swapped direction (invert it).
+      if (custom) {
+        const current = Number($("manual-rate").value);
+        if (current > 0) $("manual-rate").value = String(Number((1 / current).toPrecision(8)));
+      }
+      calculate();
+    });
     $("manual-toggle").addEventListener("click", () => { custom = !custom; $("manual-wrap").classList.toggle("visible", custom); renderLanguage(); });
     document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => { lang = button.dataset.lang; store.set("rateflow-lang", lang); renderLanguage(); }));
     const savedUpdated = store.get("rateflow-updated");
